@@ -36,7 +36,6 @@ for contour in contours:
         break
 
 # Pipeline step 6: Perspective transformation
-height, width = grey.shape
 
 # Sort the corners (From upper to lower, then left to right by pairs)
 sheetContour = [x[0] for x in sheetContour]
@@ -44,11 +43,15 @@ sheetContour = sorted(sheetContour, key=lambda p: p[1])
 sheetContour[:2] = sorted(sheetContour[:2], key=lambda p: p[0])
 sheetContour[2:] = sorted(sheetContour[2:], key=lambda p: p[0])
 
+# We've to keep document aspect ratio, use euclidean distance as reference
+width = np.linalg.norm(sheetContour[0]-sheetContour[1])
+height = np.linalg.norm(sheetContour[0]-sheetContour[2])
+
 pts_src = np.float32(sheetContour)
 pts_dst = np.float32([(0, 0), (width, 0), (0, height), (width, height)])
 
 matrix = cv2.getPerspectiveTransform(pts_src, pts_dst)
-img = cv2.warpPerspective(img, matrix, (width, height))
+img = cv2.warpPerspective(img, matrix, (int(width), int(height)))
 
 # Pipeline extra step: Visualise img status
 cv2.namedWindow(__frame_name__, cv2.WINDOW_NORMAL)  # Enable manual resizing of window
