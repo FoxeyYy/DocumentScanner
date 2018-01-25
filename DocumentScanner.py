@@ -4,11 +4,12 @@ import numpy as np
 
 __author__ = "Héctor Del Campo Pando"
 __version__ = "1.0"
+__img_path__ = "test1.jpg"
 
 __frame_name__ = "Image"
 
 # Pipeline step 1: Read image
-img = cv2.imread("test1.jpg", cv2.IMREAD_UNCHANGED)
+img = cv2.imread(__img_path__, cv2.IMREAD_UNCHANGED)
 
 # Pipeline step 2: Preprocess
 grey = cv2.cvtColor(img, cv2.COLOR_RGBA2GRAY)  # Grey channel is enough for our goal
