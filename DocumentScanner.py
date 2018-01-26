@@ -6,20 +6,20 @@ __author__ = "Héctor Del Campo Pando"
 __version__ = "1.0"
 __img_path__ = "test1.jpg"
 
-__frame_name__ = "Image"
+__frame_name__ = "Document"
 
 # Pipeline step 1: Read image
 img = cv2.imread(__img_path__, cv2.IMREAD_UNCHANGED)
 
 # Pipeline step 2: Preprocess
 grey = cv2.cvtColor(img, cv2.COLOR_RGBA2GRAY)  # Grey channel is enough for our goal
-grey = cv2.medianBlur(grey, 35)  # Blur image to remove text and noise
+grey = cv2.bilateralFilter(grey, 7, 40, 40)  # Blur image to remove text and noise
 
 # Pipeline step 3: Edge detection
-edges = cv2.Canny(grey, 130, 180)
+edges = cv2.Canny(grey, 120, 180)
 
 kernel = np.ones((16, 16), np.uint8)
-dilation = cv2.dilate(grey, kernel, iterations=1)  # Dilate detected edges to avoid holes
+edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)  # Dilate detected edges to avoid holes
 
 # Pipeline step 4: Contour detection
 _, contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -30,7 +30,7 @@ contours = sorted(contours, key=cv2.contourArea, reverse=True)[:10]
 sheetContour = None
 for contour in contours:
     peri = cv2.arcLength(contour, True)
-    approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
+    approx = cv2.approxPolyDP(contour, 0.05 * peri, True)
 
     if len(approx) == 4:
         sheetContour = approx
@@ -53,6 +53,10 @@ pts_dst = np.float32([(0, 0), (width, 0), (0, height), (width, height)])
 
 matrix = cv2.getPerspectiveTransform(pts_src, pts_dst)
 img = cv2.warpPerspective(img, matrix, (int(width), int(height)))
+
+# Pipeline step 7: Thresholding
+img = cv2.cvtColor(img, cv2.COLOR_RGBA2GRAY)
+img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 8)
 
 # Pipeline extra step: Visualise img status
 cv2.namedWindow(__frame_name__, cv2.WINDOW_NORMAL)  # Enable manual resizing of window
